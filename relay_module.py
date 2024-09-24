@@ -31,13 +31,13 @@ try:
 
       print("Channel 1:The Common Contact is access to the Normal Open Contact!")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
       GPIO.output(Relay_Ch1,GPIO.HIGH)
 
       print("Channel 1:The Common Contact is access to the Normal Closed Contact!\n")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
 #Control the Channel 2
 
@@ -45,13 +45,13 @@ try:
 
       print("Channel 2:The Common Contact is access to the Normal Open Contact!")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
       GPIO.output(Relay_Ch2,GPIO.HIGH)
 
       print("Channel 2:The Common Contact is access to the Normal Closed Contact!\n")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
 #Control the Channel 3
 
@@ -59,13 +59,13 @@ try:
 
       print("Channel 3:The Common Contact is access to the Normal Open Contact!")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
       GPIO.output(Relay_Ch3,GPIO.HIGH)
 
       print("Channel 3:The Common Contact is access to the Normal Closed Contact!\n")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
 #Control the Channel 4
 
@@ -73,13 +73,13 @@ try:
 
       print("Channel 4:The Common Contact is access to the Normal Open Contact!")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
       GPIO.output(Relay_Ch4,GPIO.HIGH)
 
       print("Channel 4:The Common Contact is access to the Normal Closed Contact!\n")
 
-      time.sleep(0.5)
+      time.sleep(1)
 
 except:
 
