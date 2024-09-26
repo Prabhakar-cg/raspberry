@@ -4,7 +4,7 @@ import time
 
 Relay_Ch1 = 14
 
-Relay_Ch2 = 15
+#Relay_Ch2 = 15
 
 Relay_Ch3 = 18
 
@@ -15,7 +15,7 @@ GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(Relay_Ch1,GPIO.OUT)
-GPIO.setup(Relay_Ch2,GPIO.OUT)
+#GPIO.setup(Relay_Ch2,GPIO.OUT)
 GPIO.setup(Relay_Ch3,GPIO.OUT)
 GPIO.setup(Relay_Ch4,GPIO.OUT)
 
@@ -41,17 +41,17 @@ try:
 
 #Control the Channel 2
 
-      GPIO.output(Relay_Ch2,GPIO.LOW)
+      #GPIO.output(Relay_Ch2,GPIO.LOW)
 
-      print("Channel 2:The Common Contact is access to the Normal Open Contact!")
+      #print("Channel 2:The Common Contact is access to the Normal Open Contact!")
 
-      time.sleep(1)
+      #time.sleep(1)
 
-      GPIO.output(Relay_Ch2,GPIO.HIGH)
+      #GPIO.output(Relay_Ch2,GPIO.HIGH)
 
-      print("Channel 2:The Common Contact is access to the Normal Closed Contact!\n")
+      #print("Channel 2:The Common Contact is access to the Normal Closed Contact!\n")
 
-      time.sleep(1)
+      #time.sleep(1)
 
 #Control the Channel 3
 
