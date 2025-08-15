@@ -1,0 +1,129 @@
+---
+- name: Setup Pi-hole on Raspberry Pi 4B
+  hosts: pihole
+  become: true
+  gather_facts: true
+
+  vars:
+    # Adjust these for your network
+    pihole_interface: "eth0"
+    pihole_ipv4_address: "192.168.1.2"
+    pihole_ipv4_cidr: 24
+    pihole_ipv6_address: ""
+    pihole_dns_1: "1.1.1.1"
+    pihole_dns_2: "1.0.0.1"
+    pihole_query_logging: true
+    pihole_install_web_server: true
+    pihole_install_web_interface: true
+    pihole_lighttpd_enabled: true
+    pihole_webpassword: "ChangeMe123!"  # Set a strong password
+    pihole_timezone: "Etc/UTC"
+
+    # Optional: configure static IP via dhcpcd (use with caution if connecting over SSH)
+    configure_static_ip: false
+    dhcpcd_conf_path: /etc/dhcpcd.conf
+
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+  tasks:
+    - name: Ensure required packages are present
+      ansible.builtin.apt:
+        name:
+          - curl
+          - git
+          - ca-certificates
+          - iproute2
+          - cron
+          - sudo
+          - lsof
+          - netcat-openbsd
+          - whiptail
+        state: present
+
+    - name: Optionally configure a static IP with dhcpcd
+      ansible.builtin.blockinfile:
+        path: "{{ dhcpcd_conf_path }}"
+        marker: "# {mark} ANSIBLE MANAGED PIHOLE"
+        block: |
+          interface {{ pihole_interface }}
+          static ip_address={{ pihole_ipv4_address }}/{{ pihole_ipv4_cidr }}
+      notify: Restart dhcpcd
+      when: configure_static_ip
+
+    - name: Check if Pi-hole is already installed
+      ansible.builtin.command: pihole -v
+      register: pihole_check
+      failed_when: false
+      changed_when: false
+
+    - name: Ensure /etc/pihole exists
+      ansible.builtin.file:
+        path: /etc/pihole
+        state: directory
+        mode: "0755"
+
+    - name: Render setupVars.conf for unattended install
+      ansible.builtin.copy:
+        dest: /etc/pihole/setupVars.conf
+        mode: "0644"
+        content: |
+          PIHOLE_INTERFACE={{ pihole_interface }}
+          IPV4_ADDRESS={{ pihole_ipv4_address }}/{{ pihole_ipv4_cidr }}
+          {% if pihole_ipv6_address|length > 0 %}IPV6_ADDRESS={{ pihole_ipv6_address }}{% endif %}
+          PIHOLE_DNS_1={{ pihole_dns_1 }}
+          PIHOLE_DNS_2={{ pihole_dns_2 }}
+          QUERY_LOGGING={{ 'true' if pihole_query_logging else 'false' }}
+          INSTALL_WEB_SERVER={{ 'true' if pihole_install_web_server else 'false' }}
+          INSTALL_WEB_INTERFACE={{ 'true' if pihole_install_web_interface else 'false' }}
+          LIGHTTPD_ENABLED={{ 'true' if pihole_lighttpd_enabled else 'false' }}
+          DNSMASQ_LISTENING=local
+          BLOCKING_ENABLED=true
+          WEBUIBOXEDLAYOUT=boxed
+          TEMPERATUREUNIT=C
+          WEBTHEME=default-dark
+          REV_SERVER=false
+          PIHOLE_SKIP_OS_CHECK=true
+      when: pihole_check.rc != 0
+
+    - name: Download Pi-hole installer script
+      ansible.builtin.get_url:
+        url: https://install.pi-hole.net
+        dest: /tmp/pihole-install.sh
+        mode: "0755"
+      when: pihole_check.rc != 0
+
+    - name: Run Pi-hole unattended installer
+      environment:
+        NONINTERACTIVE: "1"
+        PIHOLE_SKIP_OS_CHECK: "true"
+        TZ: "{{ pihole_timezone }}"
+      ansible.builtin.command: bash /tmp/pihole-install.sh --unattended
+      args:
+        creates: /usr/local/bin/pihole
+      when: pihole_check.rc != 0
+
+    - name: Set Pi-hole web UI password
+      ansible.builtin.command: pihole -a -p "{{ pihole_webpassword }}" -q
+      no_log: true
+      changed_when: true
+      when: pihole_webpassword | length > 0
+
+    - name: Ensure Pi-hole ansible.builtin.services are enabled and running
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - pihole-FTL
+        - lighttpd
+
+  handlers:
+    - name: Restart dhcpcd
+      ansible.builtin.service:
+        name: dhcpcd
+        state: restarted
+      when: configure_static_ip
